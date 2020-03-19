@@ -1,4 +1,4 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
 
     "use strict";
 
@@ -9,20 +9,20 @@ module.exports = function(RED) {
     function decodeAPI(api) {
         var a = api.split(':', 2);
         return {
-            name: a[0],
-            version: a[1]
+            name: a[ 0 ],
+            version: a[ 1 ]
         };
     }
 
     var google = require('googleapis');
     var discovery = google.discovery('v1');
 
-    RED.httpAdmin.get('/google/apis', function(req, res) {
+    RED.httpAdmin.get('/google/apis', function (req, res) {
         discovery.apis.list({
             fields: "items(name,version)"
-        }, function(err, data) {
+        }, function (err, data) {
             var response = [];
-            data.items.forEach(function(v) {
+            data.items.forEach(function (v) {
                 response.push(encodeAPI(v.name, v.version));
             });
             response.sort();
@@ -30,7 +30,7 @@ module.exports = function(RED) {
         });
     });
 
-    RED.httpAdmin.get('/google/apis/:api/info', function(req, res) {
+    RED.httpAdmin.get('/google/apis/:api/info', function (req, res) {
 
         var api = decodeAPI(req.params.api);
 
@@ -38,10 +38,10 @@ module.exports = function(RED) {
             api: api.name,
             version: api.version,
             fields: "auth,methods,resources"
-        }, function(err, data) {
+        }, function (err, data) {
 
             if (err) {
-              return res.status(500).json(err);
+                return res.status(500).json(err);
             }
 
             var response = {
@@ -52,13 +52,13 @@ module.exports = function(RED) {
             function processResources(d, parent) {
                 var prefix = parent ? parent + '.' : '';
                 if (d.methods) {
-                    Object.keys(d.methods).forEach(function(k) {
+                    Object.keys(d.methods).forEach(function (k) {
                         response.operations.push(prefix + k);
                     });
                 }
                 if (d.resources) {
-                    Object.keys(d.resources).forEach(function(k) {
-                        processResources(d.resources[k], prefix + k);
+                    Object.keys(d.resources).forEach(function (k) {
+                        processResources(d.resources[ k ], prefix + k);
                     });
                 }
             }
@@ -78,17 +78,20 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         this.key = JSON.parse(config.key);
         this.scopes = config.scopes;
-        this.getAuth = function() {
-          if(!auth) {
-            auth = new google.auth.JWT(
-                this.key.client_email,
-                null,
-                this.key.private_key,
-                this.scopes.split('\n'),
-                null
-            );
-          }
-          return auth;
+        if (config.subject) {
+            this.subject = config.subject;
+        }
+        this.getAuth = function () {
+            if (!auth) {
+                auth = new google.auth.JWT(
+                    this.key.client_email,
+                    null,
+                    this.key.private_key,
+                    this.scopes.split('\n'),
+                    this.subject
+                );
+            }
+            return auth;
         };
     }
 
@@ -101,7 +104,7 @@ module.exports = function(RED) {
         node.operation = config.operation;
         node.scopes = config.scopes;
 
-        node.on('input', function(msg) {
+        node.on('input', function (msg) {
 
             node.status({
                 fill: 'blue',
@@ -120,12 +123,12 @@ module.exports = function(RED) {
             var auth = node.config.getAuth();
 
             var api = decodeAPI(node.api);
-            api = google[api.name]({
+            api = google[ api.name ]({
                 version: api.version,
                 auth: auth
             });
 
-            auth.authorize(function(err, tokens) {
+            auth.authorize(function (err, tokens) {
 
                 if (err) {
                     node.status({
@@ -139,11 +142,11 @@ module.exports = function(RED) {
 
                 var props = node.operation.split('.');
                 var operation = api;
-                props.forEach(function(val) {
-                    operation = operation[val];
+                props.forEach(function (val) {
+                    operation = operation[ val ];
                 });
 
-                operation(msg.payload, function(err, res) {
+                operation(msg.payload, function (err, res) {
 
                     if (err) {
                         node.status({

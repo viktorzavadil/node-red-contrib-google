@@ -6,6 +6,10 @@
                 value: "Google",
                 required: true
             },
+            subject: {
+                value: "",
+                required: false
+            },
             key: {
                 value: "{}",
                 required: true
@@ -17,7 +21,7 @@
         },
         inputs: 0,
         outputs: 0,
-        label: function() {
+        label: function () {
             return this.name || "Google API";
         }
     });
@@ -28,6 +32,12 @@
         <label for="node-config-input-name">
             <i class="icon-bookmark"></i>
             Name</label>
+        <input type="text" id="node-config-input-name"/>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-name">
+            <i class="fa fa-envelope"></i>
+            Subject</label>
         <input type="text" id="node-config-input-name"/>
     </div>
     <div class="form-row">
@@ -42,6 +52,9 @@
             Scopes</label>
         <textarea id="node-config-input-scopes" rows="10" style="width: 100%"></textarea>
     </div>
+
+
+
 </script>
 
 <script type="text/javascript">
@@ -65,7 +78,7 @@
         },
         inputs: 1,
         outputs: 1,
-        label: function() {
+        label: function () {
             return this.name || "google";
         },
         oneditprepare: function oneditprepare() {
@@ -75,21 +88,21 @@
             var selectOperation = $('#node-input-operation');
             var scopesInfo = $('#node-scopes-info');
 
-            selectAPI.change(function() {
+            selectAPI.change(function () {
 
                 scopesInfo.empty();
                 selectOperation.children().not('#node-input-dynamic-operation').remove();
                 var api = selectAPI.val();
 
                 if (api) {
-                    $.getJSON("google/apis/" + api + "/info", function(data) {
-                        selectOperation.children().last().after(data.operations.map(function(d) {
+                    $.getJSON("google/apis/" + api + "/info", function (data) {
+                        selectOperation.children().last().after(data.operations.map(function (d) {
                             return $('<option></option>').attr('value', d).attr('selected', node.operation === d).text(d).wrap('<p/>').parent().html();
                         }).join(""));
                         if (data.operations.indexOf(node.operation) < 0) {
                             $('#node-input-dynamic-operation').attr('selected', true);
-                        };
-                        $.each(data.scopes, function(i, v) {
+                        }
+                        $.each(data.scopes, function (i, v) {
                             scopesInfo.append($('<li></li>').text(v));
                         });
                     });
@@ -99,8 +112,8 @@
                 selectOperation.change();
             });
 
-            $.getJSON("google/apis", function(data) {
-                selectAPI.children().last().after(data.map(function(d) {
+            $.getJSON("google/apis", function (data) {
+                selectAPI.children().last().after(data.map(function (d) {
                     return $('<option></option>').attr('value', d).attr('selected', node.api === d).text(d).wrap('<p/>').parent().html();
                 }).join(""));
                 if (data.indexOf(node.api) < 0) {
