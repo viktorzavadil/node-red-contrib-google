@@ -78,9 +78,8 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         this.key = JSON.parse(config.key);
         this.scopes = config.scopes;
-        if (config.subject) {
-            this.subject = config.subject;
-        }
+        this.subject = config.subject;
+
         this.getAuth = function () {
             if (!auth) {
                 auth = new google.auth.JWT(
@@ -88,7 +87,7 @@ module.exports = function (RED) {
                     null,
                     this.key.private_key,
                     this.scopes.split('\n'),
-                    this.subject
+                    this.subject || null
                 );
             }
             return auth;
