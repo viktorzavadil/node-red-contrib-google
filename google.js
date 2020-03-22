@@ -21,6 +21,11 @@ module.exports = function (RED) {
         discovery.apis.list({
             fields: "items(name,version)"
         }, function (err, data) {
+
+            if (err) {
+                return res.status(500).json(err);
+            }
+
             var response = [];
             data.items.forEach(function (v) {
                 response.push(encodeAPI(v.name, v.version));
